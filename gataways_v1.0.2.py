@@ -16,6 +16,21 @@ import binascii
 
 
 class Ui_Form(object):
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    ip_list = ''
+    port = 20215
+    buffersize = 1024
+    msg = 'REQUEST'
+    ip_port = ('', port)
+    data_list = [[]]
+    server_addr_list = [[]]
+
+    SynHEAD = 'GWCF' #同步字
+    ProtocalVER = '1' #协议版本
+    PayloadLEN = '0' #负载长度
+    CRC = '0' #crc校验
+
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(642, 522)
@@ -117,6 +132,8 @@ class Ui_Form(object):
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_9)
         self.DHCPCB = QtWidgets.QComboBox(self.groupBox_3)
         self.DHCPCB.setObjectName("DHCPCB")
+        self.DHCPCB.addItem("")
+        self.DHCPCB.addItem("")
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.DHCPCB)
         self.label_10 = QtWidgets.QLabel(self.groupBox_3)
         self.label_10.setObjectName("label_10")
@@ -147,6 +164,8 @@ class Ui_Form(object):
         self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_7)
         self.WireSecurityCB = QtWidgets.QComboBox(self.groupBox_2)
         self.WireSecurityCB.setObjectName("WireSecurityCB")
+        self.WireSecurityCB.addItem("")
+        self.WireSecurityCB.addItem("")
         self.formLayout_3.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.WireSecurityCB)
         self.label_8 = QtWidgets.QLabel(self.groupBox_2)
         self.label_8.setObjectName("label_8")
@@ -212,15 +231,22 @@ class Ui_Form(object):
         self.formLayout_5.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_22)
         self.RSSIFLCB = QtWidgets.QComboBox(self.groupBox_5)
         self.RSSIFLCB.setObjectName("RSSIFLCB")
+        self.RSSIFLCB.addItems(("Default","1m","3m","5m","10m","15m"))
+        self.RSSIFLCB.setCurrentIndex(0)
         self.formLayout_5.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.RSSIFLCB)
         self.AdvFLCB = QtWidgets.QComboBox(self.groupBox_5)
         self.AdvFLCB.setObjectName("AdvFLCB")
+        self.AdvFLCB.addItems(("Allow All Advertising Data","iBeacon only","Eddystone UID only","Eddystone URL only"))
         self.formLayout_5.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.AdvFLCB)
         self.DupliFLCB = QtWidgets.QComboBox(self.groupBox_5)
         self.DupliFLCB.setObjectName("DupliFLCB")
+        self.DupliFLCB.addItems(("No","Yes"))
+        self.DupliFLCB.setCurrentIndex(0)
         self.formLayout_5.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.DupliFLCB)
         self.AutoRSTCB = QtWidgets.QComboBox(self.groupBox_5)
         self.AutoRSTCB.setObjectName("AutoRSTCB")
+        self.AutoRSTCB.addItems(("Disable","1h","2h","3h","4h","5h","6h","7h","8h","9h","10h","11h","12h","13h","14h","15h","16h","17h","18h","19h","20h","21h","22h","23h","24h"))
+        self.AutoRSTCB.setCurrentIndex(0)
         self.formLayout_5.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.AutoRSTCB)
         self.ReqIntvSB = QtWidgets.QSpinBox(self.groupBox_5)
         self.ReqIntvSB.setMinimum(1)
@@ -238,6 +264,9 @@ class Ui_Form(object):
         self.formLayout_4.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_14)
         self.ConnTypeCB = QtWidgets.QComboBox(self.groupBox_4)
         self.ConnTypeCB.setObjectName("ConnTypeCB")
+        self.ConnTypeCB.addItems(("WebSocket Client","HTTP Client","MQTT Client"))
+        self.ConnTypeCB.setCurrentIndex(0)
+        # self.ConnTypeCB.currentText()
         self.formLayout_4.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.ConnTypeCB)
         self.label_15 = QtWidgets.QLabel(self.groupBox_4)
         self.label_15.setObjectName("label_15")
@@ -284,6 +313,7 @@ class Ui_Form(object):
 
         # func
         self.FindGWBTN_onclik()
+        self.NetworkBTN_setting()
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -300,10 +330,14 @@ class Ui_Form(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("Form", "Dashboard"))
         self.groupBox_3.setTitle(_translate("Form", "Ethernet Setting"))
         self.label_9.setText(_translate("Form", "DHCP"))
+        self.DHCPCB.setItemText(1,_translate("Form", "Enable"))
+        self.DHCPCB.setItemText(0, _translate("Form", "Disable"))
         self.label_10.setText(_translate("Form", "IP"))
         self.label_23.setText(_translate("Form", "Gateway"))
         self.label_24.setText(_translate("Form", "Netmask"))
         self.groupBox_2.setTitle(_translate("Form", "WiFi Station Setting"))
+        self.WireSecurityCB.setItemText(0, _translate("Form", "WPA-PSK/WPA2-PSK"))
+        self.WireSecurityCB.setItemText(1, _translate("Form", "WPA2-Enterprise"))
         self.label_7.setText(_translate("Form", "Wireless Security"))
         self.label_8.setText(_translate("Form", "Wi-Fi SSID"))
         self.label_11.setText(_translate("Form", "Security Key"))
@@ -327,43 +361,44 @@ class Ui_Form(object):
         self.OTARSTBTN.setText(_translate("Form", "Restart"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("Form", "Advanced"))
 
+
     def FindGWBTN_onclik(self):
 
         def cao():
-            print('Hello, CK. FBI warning!')
-            print('Application is running.')
-            client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            ip_list = ''
-            port = 20215
-            buffersize = 1024
-            msg = 'REQUEST'
-            ip_port = ('', port)
             data = [0, 0, 0]
+            idx = 0
             for i in range(231, 235, 1):
                 try:
-                    ip_list = '192.168.1.' + str(i)
-                    print(' ', ip_list)
+                    self.ip_list = '192.168.1.' + str(i)
+                    print(' ', self.ip_list)
 
                     # ip_port = ('192.168.1.232', 20215)
-                    client.sendto(msg.encode('utf-8'), (ip_list, port))
+                    self.client.sendto(self.msg.encode('utf-8'), (self.ip_list, self.port))
+                    # self.client.sendto((b'REQUEST'), (self.ip_list, self.port))
 
-                    client.settimeout(0.2)
-                    data, server_addr = client.recvfrom(buffersize)
-                    print(type(data), type(server_addr))
+                    self.client.settimeout(0.2)
+                    data, server_addr = self.client.recvfrom(self.buffersize)
+                    print(type(data), type(server_addr), data, server_addr, type(data[0]))
 
                 except IOError as e:
                     print(e)
                 finally:
                     if (data[0] == ord('R') and data[1] == ord('S') and data[2] == ord('P')):
-                        ip_port = (ip_list, port)
+                        self.ip_port = (self.ip_list, self.port)
+                        self.data_list[idx] = data
+                        self.server_addr_list[idx] = server_addr
+                        idx+=1
+                        print('idx:',idx)
                         print('IP_PORT IS Okay.')
                         print("recvform:", server_addr, 'data:', data)
+
                         self.FindGWCB.addItem(server_addr[0])
-                        self.FirmwaveED.setText(str(data[3:8].decode('utf-8')))
-                        self.HardwareED.setText(str(data[8:13].decode('utf-8')))
-                        # self.MACED.setText(hex(data[13:19].decode('utf-8')))
-                        self.SerialED.setText(str(data[19:31].decode('utf-8')))
-                        self.IPAED.setText(server_addr[0])
+                        self.FindGWCB_choose(data, server_addr)
+                        # self.FirmwaveED.setText(str(data[3:8].decode('utf-8')))
+                        # self.HardwareED.setText(str(data[8:13].decode('utf-8')))
+                        # # self.MACED.setText('{:02X}'.format(data[13:19].decode('utf-8')))
+                        # self.SerialED.setText(str(data[19:31].decode('utf-8')))
+                        # self.IPAED.setText(server_addr[0])
 
                         data, server_addr = b'0', (0, 0)
                     pass
@@ -372,6 +407,60 @@ class Ui_Form(object):
             pass
         self.FindGWBTN.clicked.connect(cao)
 
+        pass
+
+    def FindGWCB_choose(self, data, server_addr):
+        print('FindGWCB_choose IS Okay.')
+        def cao():
+            self.FirmwaveED.setText(str(data[3:8].decode('utf-8')))
+            self.HardwareED.setText(str(data[8:13].decode('utf-8')))
+            self.MACED.setText(bytes.hex(data[13:19]))
+            self.SerialED.setText(str(data[19:31].decode('utf-8')))
+            self.IPAED.setText(server_addr[0])
+            pass
+
+        self.FindGWCB.currentTextChanged.connect(cao)
+        pass
+
+    def NetworkBTN_setting(self):
+        msgTYPE = '1' #报文类型
+
+        def cao():
+            networkHead = self.SynHEAD + self.ProtocalVER + msgTYPE #CRC
+            network_setstr = ''
+            data = ''
+            # print('checkbox:', type(self.OpenWifiCK.checkState()),self.OpenWifiCK.checkState(), type(self.OpenWifiCK.isChecked(), self.OpenWifiCK.isChecked()))
+            print('currentidx:', type(self.WireSecurityCB.currentIndex()),self.WireSecurityCB.currentIndex())
+            if(self.OpenWifiCK.isChecked()):
+                network_setstr = network_setstr + '1'
+            else:
+                network_setstr = network_setstr + '0'
+            network_setstr = network_setstr + str(self.WireSecurityCB.currentIndex()) + str(len(self.WifiSSIDED.text())) + '+' +self.WifiSSIDED.text() + str(len(self.WifikeyED.text())) + '+' +self.WifikeyED.text()
+            print('1, ',network_setstr)
+            if(self.DHCPCB.currentIndex() == 0):
+                print('enter DHCP.')
+                self.PayloadLEN = str(len(network_setstr))
+                networkHead = networkHead + self.PayloadLEN + '+'
+                network_setstr = networkHead + network_setstr + str(self.DHCPCB.currentIndex()) + str(len(self.IPED.text())) + '+' + self.IPED.text() + str(len(self.GatewayED.text())) + '+' + self.GatewayED.text() + str(len(self.NetmaskED.text())) + '+' + self.NetmaskED.text()
+                print('2, ', network_setstr, type(network_setstr))
+                self.client.sendto(network_setstr.encode('utf-8'), (self.ip_list, self.port))
+                self.client.settimeout(1)
+                data, server_addr = self.client.recvfrom(self.buffersize)
+                print(type(data), type(server_addr), data, server_addr)
+            else:
+                self.PayloadLEN = str(len(network_setstr))
+                networkHead = networkHead + self.PayloadLEN + '+'
+                network_setstr = networkHead + network_setstr
+                print('3, ', network_setstr, type(network_setstr))
+                self.client.sendto(network_setstr.encode('utf-8'), (self.ip_list, self.port))
+                self.client.settimeout(1)
+                data, server_addr = self.client.recvfrom(self.buffersize)
+                print(type(data), type(server_addr), data, server_addr)
+                pass
+
+
+            pass
+        self.NetworkBTN.clicked.connect(cao)
         pass
 
 
