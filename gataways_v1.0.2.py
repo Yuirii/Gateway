@@ -246,7 +246,7 @@ class Ui_Form(object):
         self.formLayout_5.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.DupliFLCB)
         self.AutoRSTCB = QtWidgets.QComboBox(self.groupBox_5)
         self.AutoRSTCB.setObjectName("AutoRSTCB")
-        self.AutoRSTCB.addItems(("Disable","1h","2h","3h","4h","5h","6h","7h","8h","9h","10h","11h","12h","13h","14h","15h","16h","17h","18h","19h","20h","21h","22h","23h","24h"))
+        self.AutoRSTCB.addItems(("Disable","1h","2h","3h","4h","6h","8h","12h","24h"))
         self.AutoRSTCB.setCurrentIndex(0)
         self.formLayout_5.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.AutoRSTCB)
         self.ReqIntvSB = QtWidgets.QSpinBox(self.groupBox_5)
@@ -266,7 +266,7 @@ class Ui_Form(object):
         self.ConnTypeCB = QtWidgets.QComboBox(self.groupBox_4)
         self.ConnTypeCB.setObjectName("ConnTypeCB")
         self.ConnTypeCB.addItems(("WebSocket Client","HTTP Client","MQTT Client"))
-        self.ConnTypeCB.setCurrentIndex(0)
+        self.ConnTypeCB.setCurrentIndex(2)
         # self.ConnTypeCB.currentText()
         self.formLayout_4.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.ConnTypeCB)
         self.label_15 = QtWidgets.QLabel(self.groupBox_4)
@@ -329,6 +329,7 @@ class Ui_Form(object):
         # func
         self.FindGWBTN_onclik()
         self.NetworkBTN_setting()
+        self.AppBTN_setting()
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
@@ -387,6 +388,7 @@ class Ui_Form(object):
             idx = 0
             for i in range(231, 235, 1):
                 try:
+                    ''' search client ip '''
                     self.ip_list = '192.168.1.' + str(i)
                     print(' ', self.ip_list)
 
@@ -412,6 +414,8 @@ class Ui_Form(object):
 
                         self.FindGWCB.addItem(server_addr[0])
                         self.FindGWCB_choose(data, server_addr)
+                        self.DHCP_choose()
+                        self.APP_choose()
 
                         data, server_addr = b'0', (0, 0)
                     pass
@@ -444,6 +448,7 @@ class Ui_Form(object):
             data = ''
             # print('checkbox:', type(self.OpenWifiCK.checkState()),self.OpenWifiCK.checkState(), type(self.OpenWifiCK.isChecked(), self.OpenWifiCK.isChecked()))
             print('currentidx:', type(self.WireSecurityCB.currentIndex()),self.WireSecurityCB.currentIndex())
+            ''' Wifi Station Setting '''
             if(self.OpenWifiCK.isChecked()):
                 network_setstr = network_setstr + '1'
             else:
@@ -452,6 +457,7 @@ class Ui_Form(object):
             print('1, ',network_setstr)
             if(self.DHCPCB.currentIndex() == 0):
                 print('enter DHCP.')
+                ''' Ethernet Setting '''
                 network_net = ':' +str(self.DHCPCB.currentIndex()) + str(len(self.IPED.text())) + '+' + self.IPED.text() + str(len(self.GatewayED.text())) + '+' + self.GatewayED.text() + str(len(self.NetmaskED.text())) + '+' + self.NetmaskED.text()
                 self.PayloadLEN = str(len(network_setstr) + len(network_net))
                 networkHead = networkHead + self.PayloadLEN
@@ -470,21 +476,17 @@ class Ui_Form(object):
 
 
             else:
-                self.IPED.setReadOnly(True)
-                self.GatewayED.setReadOnly(True)
-                self.NetmaskED.setReadOnly(True)
-
+                # self.IPED.setReadOnly(True)
+                # self.GatewayED.setReadOnly(True)
+                # self.NetmaskED.setReadOnly(True)
+                ''' Ethernet Setting '''
                 network_net = ':' + str(self.DHCPCB.currentIndex())
                 self.PayloadLEN = str(len(network_setstr) + len(network_net))
                 networkHead = networkHead + self.PayloadLEN
                 network_setstr = networkHead + network_setstr + network_net
                 print('3, ', network_setstr, type(network_setstr))
                 network_encode = network_setstr.encode('utf-8')
-                print('encode:', network_encode)
                 networkcrc = CRC8.crc8(network_encode).to_bytes(1, byteorder='little', signed=False)
-                print('crc8:', networkcrc)
-                print('sum:', network_encode + networkcrc)
-                self.client.sendto(network_encode, (self.ip_list, self.port))
                 self.client.sendto(
                     network_encode + networkcrc,
                     (self.ip_list, self.port))
@@ -500,30 +502,103 @@ class Ui_Form(object):
         self.NetworkBTN.clicked.connect(cao)
         pass
 
+    def DHCP_choose(self):
+
+        def cao():
+            if(self.DHCPCB.currentIndex() == 0):
+                self.IPED.setReadOnly(False)
+                self.GatewayED.setReadOnly(False)
+                self.NetmaskED.setReadOnly(False)
+            else:
+                self.IPED.setText('')
+                self.GatewayED.setText('')
+                self.NetmaskED.setText('')
+                self.IPED.setReadOnly(True)
+                self.GatewayED.setReadOnly(True)
+                self.NetmaskED.setReadOnly(True)
+            pass
+        self.DHCPCB.currentTextChanged.connect(cao)
+        pass
 
     def AppBTN_setting(self):
         msgTYPE = '2'  # 报文类型
 
         def cao():
             appHead = self.SynHEAD + self.ProtocalVER + msgTYPE #CRC
+            app_server = ''
+            app_msg = ''
             app_setstr = ''
 
             if(self.ConnTypeCB.currentIndex() == 0):
-                self.UsrNameED.setReadOnly(True)
-                self.PssWordED.setReadOnly(True)
-                app_setstr = '0'
+                app_server = '0' + str(len(self.HostED.text())) + '+' + self.HostED.text() + str(len(self.PortED.text())) + '+' + self.PortED.text() + str(len(self.URIED.text())) + '+' + self.URIED.text()
+                if(self.ReqIntvSB.text() != '10'):
+                    app_msg = self.ReqIntvSB.text() + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                else:
+                    app_msg = '0' + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                app_setstr = app_server + ':' + app_msg
                 pass
+
             elif(self.ConnTypeCB.currentIndex() == 1):
-                self.UsrNameED.setReadOnly(True)
-                self.PssWordED.setReadOnly(True)
-                app_setstr = '1'
+                app_server = '1' + str(len(self.HostED.text())) + '+' + self.HostED.text() + str(len(self.PortED.text())) + '+' + self.PortED.text() + str(len(self.URIED.text())) + '+' + self.URIED.text()
+                if(self.ReqIntvSB.text() != '10'):
+                    app_msg = self.ReqIntvSB.text() + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                else:
+                    app_msg = '0' + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                app_setstr = app_server + ':' + app_msg
                 pass
+
             elif(self.ConnTypeCB.currentIndex() == 2):
-                app_setstr = '2'
+                app_server = '2' + str(len(self.HostED.text())) + '+' + self.HostED.text() + str(len(self.PortED.text())) + '+' + self.PortED.text() + str(len(self.URIED.text())) + '+' + self.URIED.text()
+                if(self.ReqIntvSB.text() != '10'):
+                    app_msg = self.ReqIntvSB.text() + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                else:
+                    app_msg = '0' + str(self.RSSIFLCB.currentIndex()) + str(
+                        self.AdvFLCB.currentIndex()) + str(self.DupliFLCB.currentIndex()) + str(
+                        self.AutoRSTCB.currentIndex())
+                app_setstr = app_server + ':' + app_msg
                 pass
+            print('app setting:',app_setstr)
+            self.PayloadLEN = str(len(app_setstr))
+            appHead = appHead + self.PayloadLEN
+            app_setstr = appHead + app_setstr
+            app_encode = app_setstr.encode('utf-8')
+            app_crc = CRC8.crc8(app_encode).to_bytes(1, byteorder='little', signed=False)
+            self.client.sendto(
+                app_encode + app_crc,
+                (self.ip_list, self.port))
+
+            ''' Need to handle Rsp. '''
+            data, server_addr = self.client.recvfrom(self.buffersize)
+            print(type(data), type(server_addr), data, server_addr)
+
             pass
 
         self.ApplicationBTN.clicked.connect(cao)
+        pass
+
+    def APP_choose(self):
+
+        def cao():
+            if(self.ConnTypeCB.currentIndex() == 2):
+                self.UsrNameED.setReadOnly(False)
+                self.PssWordED.setReadOnly(False)
+            else:
+                self.UsrNameED.setText('')
+                self.PssWordED.setText('')
+                self.UsrNameED.setReadOnly(True)
+                self.PssWordED.setReadOnly(True)
+            pass
+        self.ConnTypeCB.currentTextChanged.connect(cao)
         pass
 
 if __name__ == "__main__":

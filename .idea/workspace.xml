@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8881ac7f-396a-4479-ba81-8791a8eceeae" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/CRC8.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gataways_v1.0.2.py" beforeDir="false" afterPath="$PROJECT_DIR$/gataways_v1.0.2.py" afterDir="false" />
     </list>
