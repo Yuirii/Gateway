@@ -10,6 +10,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import socket
+import CRC8
 import time
 import os
 import binascii
@@ -286,6 +287,20 @@ class Ui_Form(object):
         self.URIED = QtWidgets.QLineEdit(self.groupBox_4)
         self.URIED.setObjectName("URIED")
         self.formLayout_4.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.URIED)
+
+        self.label_26 = QtWidgets.QLabel(self.groupBox_4)
+        self.label_26.setObjectName("label_26")
+        self.formLayout_4.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_26)
+        self.UsrNameED = QtWidgets.QLineEdit(self.groupBox_4)
+        self.UsrNameED.setObjectName("UsrNameED")
+        self.formLayout_4.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.UsrNameED)
+        self.label_27 = QtWidgets.QLabel(self.groupBox_4)
+        self.label_27.setObjectName("label_27")
+        self.formLayout_4.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_27)
+        self.PssWordED = QtWidgets.QLineEdit(self.groupBox_4)
+        self.PssWordED.setObjectName("PssWordED")
+        self.formLayout_4.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.PssWordED)
+
         self.gridLayout_3.addWidget(self.groupBox_4, 0, 0, 1, 1)
         self.ApplicationBTN = QtWidgets.QPushButton(self.tab_3)
         self.ApplicationBTN.setObjectName("ApplicationBTN")
@@ -353,7 +368,10 @@ class Ui_Form(object):
         self.label_14.setText(_translate("Form", "Connection Type"))
         self.label_15.setText(_translate("Form", "Host"))
         self.label_18.setText(_translate("Form", "Port"))
-        self.label_19.setText(_translate("Form", "URI"))
+        self.label_19.setText(_translate("Form", "URI/Topic"))
+        self.label_26.setText(_translate("Form", "UsrName"))
+        self.label_27.setText(_translate("Form", "PssWord"))
+
         self.ApplicationBTN.setText(_translate("Form", "Save"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("Form", "Application"))
         self.label_25.setText(_translate("Form", "OTA Firmware Update"))
@@ -394,11 +412,6 @@ class Ui_Form(object):
 
                         self.FindGWCB.addItem(server_addr[0])
                         self.FindGWCB_choose(data, server_addr)
-                        # self.FirmwaveED.setText(str(data[3:8].decode('utf-8')))
-                        # self.HardwareED.setText(str(data[8:13].decode('utf-8')))
-                        # # self.MACED.setText('{:02X}'.format(data[13:19].decode('utf-8')))
-                        # self.SerialED.setText(str(data[19:31].decode('utf-8')))
-                        # self.IPAED.setText(server_addr[0])
 
                         data, server_addr = b'0', (0, 0)
                     pass
@@ -439,30 +452,79 @@ class Ui_Form(object):
             print('1, ',network_setstr)
             if(self.DHCPCB.currentIndex() == 0):
                 print('enter DHCP.')
-                self.PayloadLEN = str(len(network_setstr))
-                networkHead = networkHead + self.PayloadLEN + '+'
-                network_setstr = networkHead + network_setstr + str(self.DHCPCB.currentIndex()) + str(len(self.IPED.text())) + '+' + self.IPED.text() + str(len(self.GatewayED.text())) + '+' + self.GatewayED.text() + str(len(self.NetmaskED.text())) + '+' + self.NetmaskED.text()
+                network_net = ':' +str(self.DHCPCB.currentIndex()) + str(len(self.IPED.text())) + '+' + self.IPED.text() + str(len(self.GatewayED.text())) + '+' + self.GatewayED.text() + str(len(self.NetmaskED.text())) + '+' + self.NetmaskED.text()
+                self.PayloadLEN = str(len(network_setstr) + len(network_net))
+                networkHead = networkHead + self.PayloadLEN
+                network_setstr = networkHead + network_setstr + network_net
                 print('2, ', network_setstr, type(network_setstr))
-                self.client.sendto(network_setstr.encode('utf-8'), (self.ip_list, self.port))
+                network_encode = network_setstr.encode('utf-8')
+                networkcrc = CRC8.crc8(network_encode).to_bytes(1, byteorder='little', signed=False)
+                self.client.sendto(
+                    network_encode + networkcrc,
+                    (self.ip_list, self.port))
                 self.client.settimeout(1)
-                data, server_addr = self.client.recvfrom(self.buffersize)
-                print(type(data), type(server_addr), data, server_addr)
-            else:
-                self.PayloadLEN = str(len(network_setstr))
-                networkHead = networkHead + self.PayloadLEN + '+'
-                network_setstr = networkHead + network_setstr
-                print('3, ', network_setstr, type(network_setstr))
-                self.client.sendto(network_setstr.encode('utf-8'), (self.ip_list, self.port))
-                self.client.settimeout(1)
-                data, server_addr = self.client.recvfrom(self.buffersize)
-                print(type(data), type(server_addr), data, server_addr)
-                pass
 
+                ''' Need to handle Rsp. '''
+                data, server_addr = self.client.recvfrom(self.buffersize)
+                print(type(data), type(server_addr), data, server_addr)
+
+
+            else:
+                self.IPED.setReadOnly(True)
+                self.GatewayED.setReadOnly(True)
+                self.NetmaskED.setReadOnly(True)
+
+                network_net = ':' + str(self.DHCPCB.currentIndex())
+                self.PayloadLEN = str(len(network_setstr) + len(network_net))
+                networkHead = networkHead + self.PayloadLEN
+                network_setstr = networkHead + network_setstr + network_net
+                print('3, ', network_setstr, type(network_setstr))
+                network_encode = network_setstr.encode('utf-8')
+                print('encode:', network_encode)
+                networkcrc = CRC8.crc8(network_encode).to_bytes(1, byteorder='little', signed=False)
+                print('crc8:', networkcrc)
+                print('sum:', network_encode + networkcrc)
+                self.client.sendto(network_encode, (self.ip_list, self.port))
+                self.client.sendto(
+                    network_encode + networkcrc,
+                    (self.ip_list, self.port))
+
+                ''' Need to handle Rsp. '''
+                data, server_addr = self.client.recvfrom(self.buffersize)
+                print(type(data), type(server_addr), data, server_addr)
+
+
+                pass
 
             pass
         self.NetworkBTN.clicked.connect(cao)
         pass
 
+
+    def AppBTN_setting(self):
+        msgTYPE = '2'  # 报文类型
+
+        def cao():
+            appHead = self.SynHEAD + self.ProtocalVER + msgTYPE #CRC
+            app_setstr = ''
+
+            if(self.ConnTypeCB.currentIndex() == 0):
+                self.UsrNameED.setReadOnly(True)
+                self.PssWordED.setReadOnly(True)
+                app_setstr = '0'
+                pass
+            elif(self.ConnTypeCB.currentIndex() == 1):
+                self.UsrNameED.setReadOnly(True)
+                self.PssWordED.setReadOnly(True)
+                app_setstr = '1'
+                pass
+            elif(self.ConnTypeCB.currentIndex() == 2):
+                app_setstr = '2'
+                pass
+            pass
+
+        self.ApplicationBTN.clicked.connect(cao)
+        pass
 
 if __name__ == "__main__":
     import sys
