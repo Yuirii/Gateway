@@ -5,12 +5,15 @@
 # Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
+#
+# __Author__ Yuule
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import socket
 import CRC8
+from toast import Toast
 import time
 import os
 import binascii
@@ -384,6 +387,9 @@ class Ui_Form(object):
     def FindGWBTN_onclik(self):
 
         def cao():
+            toast = Toast()
+            toast.make_text(QtCore.QPointF(1000, 600), "Waiting...", 2.5)
+
             data = [0, 0, 0]
             idx = 0
             for i in range(231, 235, 1):
