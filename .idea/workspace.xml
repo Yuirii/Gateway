@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="8881ac7f-396a-4479-ba81-8791a8eceeae" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gataways_v1.0.2.py" beforeDir="false" afterPath="$PROJECT_DIR$/gataways_v1.0.2.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -154,10 +153,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Python.gataways_v1.0.2" />
-        <item itemvalue="Python.toast" />
         <item itemvalue="Python.gataways_v1.2" />
-        <item itemvalue="Python.gateways_v1.1" />
         <item itemvalue="Python.gateways" />
+        <item itemvalue="Python.toast" />
+        <item itemvalue="Python.gateways_v1.1" />
       </list>
     </recent_temporary>
   </component>
@@ -173,6 +172,16 @@
       <updated>1622621961078</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ORDER">
+      <list>
+        <option value="0" />
+        <option value="2" />
+        <option value="3" />
+        <option value="1" />
+      </list>
+    </option>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

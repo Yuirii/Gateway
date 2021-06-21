@@ -328,7 +328,7 @@ class Ui_Form(object):
         self.retranslateUi(Form)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
-
+        Form.setWindowIcon(QtGui.QIcon("./BLElogoxx.png"))
         # func
         self.FindGWBTN_onclik()
         self.NetworkBTN_setting()
@@ -388,7 +388,7 @@ class Ui_Form(object):
 
         def cao():
             toast = Toast()
-            toast.make_text(QtCore.QPointF(1000, 600), "Waiting...", 2.5)
+            toast.make_text(QtCore.QPointF(900, 600), "Waiting...", 2.5)
 
             data = [0, 0, 0]
             idx = 0
@@ -610,6 +610,7 @@ class Ui_Form(object):
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
+
 
     window = QtWidgets.QWidget()
     ui = Ui_Form()

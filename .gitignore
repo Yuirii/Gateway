@@ -1,0 +1,5 @@
+/plugins/*
+*.zip
+*.7z
+/dist/*
+/build/*
